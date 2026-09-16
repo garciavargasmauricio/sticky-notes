@@ -1,0 +1,57 @@
+.trash-zone {
+  position: absolute;
+
+  right: 24px;
+  bottom: 24px;
+
+  width: 180px;
+  height: 90px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  box-sizing: border-box;
+
+  border: 2px dashed #777;
+  border-radius: 12px;
+
+  background: rgba(255, 255, 255, 0.95);
+
+  color: #333;
+
+  user-select: none;
+
+  pointer-events: none;
+
+  transition:
+    transform 150ms ease,
+    border-color 150ms ease,
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.trash-zone__icon {
+  font-size: 28px;
+
+  line-height: 1;
+}
+
+.trash-zone__label {
+  font-size: 13px;
+
+  font-weight: 600;
+}
+
+.trash-zone--active {
+  transform: scale(1.05);
+
+  border-color: #d32f2f;
+
+  background: #ffebee;
+
+  color: #d32f2f;
+}
