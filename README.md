@@ -1,32 +1,42 @@
-# React + TypeScript + Vite
+# Sticky Notes
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A simple desktop sticky notes application built with React and TypeScript.
 
-Currently, two official plugins are available:
+The application is structured around small, focused components. `Board` acts as the main workspace and coordinates note interactions, while `StickyNote` is responsible for rendering and handling drag, resize, and text editing behavior. `TrashZone` provides the visual target used to remove notes. Note data is represented with TypeScript interfaces to keep the application state predictable and strongly typed.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Note state and operations are centralized in the `useNotes` custom hook, including creation, movement, resizing, editing, deletion, and z-index management. Reusable logic such as note utilities, geometry calculations, and local storage persistence is kept outside the components. Pointer Events and pointer capture are used for drag and resize interactions, avoiding external drag-and-drop dependencies and keeping the interaction logic lightweight.
 
-## React Compiler
+Notes are persisted in `localStorage`, including their position, size, text, color, and stacking order. New notes receive one of four predefined colors, and interacting with a note brings it to the front. The application is designed for desktop environments with a minimum supported resolution of 1024x768.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Requirements
 
-## Expanding the Oxlint configuration
+- Node.js
+- npm
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## Running the application
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+Install dependencies:
+
+```bash
+npm install
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Start the development server:
+
+```bash
+npm run dev
+```
+
+Create a production build:
+
+```bash
+npm run build
+```
+
+## Browser Support
+
+The application is intended for the latest versions of:
+
+- Google Chrome
+- Mozilla Firefox
+- Microsoft Edge

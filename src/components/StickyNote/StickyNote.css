@@ -26,6 +26,7 @@
   cursor: grab;
 
   user-select: none;
+  touch-action: none;
 
   color: #000;
 
@@ -62,6 +63,11 @@
   resize: none;
 
   overflow: auto;
+}
+
+.sticky-note__textarea:focus-visible {
+  outline: 2px solid rgba(0, 0, 0, 0.4);
+  outline-offset: -2px;
 }
 
 .sticky-note__textarea::placeholder {

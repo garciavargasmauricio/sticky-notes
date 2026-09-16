@@ -56,10 +56,10 @@ export function StickyNote({
   const resizeState = useRef<ResizeState | null>(null);
 
   function handleDragStart(event: PointerEvent<HTMLDivElement>) {
+    // Keep receiving pointer events even if the cursor leaves the header.
     event.currentTarget.setPointerCapture(event.pointerId);
 
     onBringToFront(note.id);
-
     onDragStart(note.id);
 
     dragState.current = {
@@ -111,6 +111,7 @@ export function StickyNote({
   function handleResizeStart(event: PointerEvent<HTMLDivElement>) {
     event.stopPropagation();
 
+    // Pointer capture keeps the resize active outside the handle.
     event.currentTarget.setPointerCapture(event.pointerId);
 
     onBringToFront(note.id);
@@ -153,6 +154,14 @@ export function StickyNote({
     resizeState.current = null;
   }
 
+  function handleResizeCancel(event: PointerEvent<HTMLDivElement>) {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    resizeState.current = null;
+  }
+
   return (
     <article
       className="sticky-note"
@@ -188,6 +197,7 @@ export function StickyNote({
         onPointerDown={handleResizeStart}
         onPointerMove={handleResizeMove}
         onPointerUp={handleResizeEnd}
+        onPointerCancel={handleResizeCancel}
         aria-label="Resize note"
       />
     </article>

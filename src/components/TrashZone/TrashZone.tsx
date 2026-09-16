@@ -1,18 +1,12 @@
-import type { PointerEvent } from "react";
+import "./TrashZone.css";
 
 interface TrashZoneProps {
   isActive: boolean;
-
-  onPointerDown: (event: PointerEvent<HTMLDivElement>) => void;
 }
 
-export function TrashZone({ isActive, onPointerDown }: TrashZoneProps) {
+export function TrashZone({ isActive }: TrashZoneProps) {
   return (
-    <div
-      className={`trash-zone ${isActive ? "trash-zone--active" : ""}`}
-      onPointerDown={onPointerDown}
-      aria-label="Trash zone"
-    >
+    <div className="trash-zone" aria-label="Trash zone">
       <span className="trash-zone__icon" aria-hidden="true">
         🗑️
       </span>

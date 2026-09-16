@@ -103,10 +103,6 @@ export function Board() {
     isOverTrashRef.current = false;
   }
 
-  function handleTrashPointerDown(event: PointerEvent<HTMLDivElement>) {
-    event.stopPropagation();
-  }
-
   return (
     <main ref={boardRef} className="board">
       <button
@@ -131,10 +127,7 @@ export function Board() {
         />
       ))}
 
-      <TrashZone
-        isActive={draggingNoteId !== null && isOverTrash}
-        onPointerDown={handleTrashPointerDown}
-      />
+      <TrashZone isActive={draggingNoteId !== null && isOverTrash} />
     </main>
   );
 }

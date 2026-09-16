@@ -12,7 +12,7 @@
 .board__new-note-button {
   position: absolute;
 
-  top: 20px;
+  top: 3rem;
   left: 20px;
 
   z-index: 1000;
@@ -23,7 +23,6 @@
   border-radius: 6px;
 
   background: #222;
-
   color: #fff;
 
   font: inherit;

@@ -4,6 +4,8 @@
   right: 24px;
   bottom: 24px;
 
+  z-index: 2000;
+
   width: 180px;
   height: 90px;
 
@@ -24,7 +26,6 @@
   color: #333;
 
   user-select: none;
-
   pointer-events: none;
 
   transition:
@@ -36,13 +37,11 @@
 
 .trash-zone__icon {
   font-size: 28px;
-
   line-height: 1;
 }
 
 .trash-zone__label {
   font-size: 13px;
-
   font-weight: 600;
 }
 
