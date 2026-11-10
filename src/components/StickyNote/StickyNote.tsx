@@ -1,4 +1,4 @@
-import { useRef, type PointerEvent } from "react";
+import { memo, useRef, type PointerEvent } from "react";
 
 import type { Note, Position, Size } from "../../types/note";
 
@@ -41,7 +41,7 @@ interface ResizeState {
 const MIN_WIDTH = 160;
 const MIN_HEIGHT = 120;
 
-export function StickyNote({
+export const StickyNote = memo(function StickyNote({
   note,
   onMove,
   onResize,
@@ -56,10 +56,11 @@ export function StickyNote({
   const resizeState = useRef<ResizeState | null>(null);
 
   function handleDragStart(event: PointerEvent<HTMLDivElement>) {
+    if (event.button !== 0 || !event.isPrimary || dragState.current) return;
+
     // Keep receiving pointer events even if the cursor leaves the header.
     event.currentTarget.setPointerCapture(event.pointerId);
 
-    onBringToFront(note.id);
     onDragStart(note.id);
 
     dragState.current = {
@@ -82,13 +83,15 @@ export function StickyNote({
 
     const deltaY = event.clientY - drag.startPointerY;
 
+    const board = event.currentTarget.parentElement!.parentElement!;
     onMove(note.id, {
-      x: drag.startNoteX + deltaX,
-      y: drag.startNoteY + deltaY,
+      x: Math.max(0, Math.min(drag.startNoteX + deltaX, board.clientWidth - note.size.width)),
+      y: Math.max(0, Math.min(drag.startNoteY + deltaY, board.clientHeight - note.size.height)),
     });
   }
 
   function handleDragEnd(event: PointerEvent<HTMLDivElement>) {
+    if (!dragState.current) return;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
@@ -99,6 +102,7 @@ export function StickyNote({
   }
 
   function handleDragCancel(event: PointerEvent<HTMLDivElement>) {
+    if (!dragState.current) return;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
@@ -109,12 +113,10 @@ export function StickyNote({
   }
 
   function handleResizeStart(event: PointerEvent<HTMLDivElement>) {
-    event.stopPropagation();
+    if (event.button !== 0 || !event.isPrimary || resizeState.current) return;
 
     // Pointer capture keeps the resize active outside the handle.
     event.currentTarget.setPointerCapture(event.pointerId);
-
-    onBringToFront(note.id);
 
     resizeState.current = {
       startPointerX: event.clientX,
@@ -136,9 +138,10 @@ export function StickyNote({
 
     const deltaY = event.clientY - resize.startPointerY;
 
-    const newWidth = Math.max(MIN_WIDTH, resize.startWidth + deltaX);
+    const board = event.currentTarget.parentElement!.parentElement!;
+    const newWidth = Math.min(board.clientWidth - note.position.x, Math.max(MIN_WIDTH, resize.startWidth + deltaX));
 
-    const newHeight = Math.max(MIN_HEIGHT, resize.startHeight + deltaY);
+    const newHeight = Math.min(board.clientHeight - note.position.y, Math.max(MIN_HEIGHT, resize.startHeight + deltaY));
 
     onResize(note.id, {
       width: newWidth,
@@ -154,17 +157,12 @@ export function StickyNote({
     resizeState.current = null;
   }
 
-  function handleResizeCancel(event: PointerEvent<HTMLDivElement>) {
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
-
-    resizeState.current = null;
-  }
-
   return (
     <article
       className="sticky-note"
+      onPointerDown={(event) => {
+        if (event.button === 0 && event.isPrimary) onBringToFront(note.id);
+      }}
       style={{
         left: note.position.x,
         top: note.position.y,
@@ -180,6 +178,7 @@ export function StickyNote({
         onPointerMove={handleDragMove}
         onPointerUp={handleDragEnd}
         onPointerCancel={handleDragCancel}
+        onLostPointerCapture={handleDragCancel}
       >
         <span>Sticky Note</span>
       </div>
@@ -197,9 +196,10 @@ export function StickyNote({
         onPointerDown={handleResizeStart}
         onPointerMove={handleResizeMove}
         onPointerUp={handleResizeEnd}
-        onPointerCancel={handleResizeCancel}
+        onPointerCancel={handleResizeEnd}
+        onLostPointerCapture={handleResizeEnd}
         aria-label="Resize note"
       />
     </article>
   );
-}
+});

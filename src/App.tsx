@@ -1,7 +1,7 @@
 import { Board } from "./components/Board/Board";
 
 function App() {
-  return <Board></Board>;
+  return <Board />;
 }
 
 export default App;

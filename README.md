@@ -40,3 +40,17 @@ The application is intended for the latest versions of:
 - Google Chrome
 - Mozilla Firefox
 - Microsoft Edge
+
+## Interaction and persistence
+
+Unchanged notes skip rendering through `React.memo` and stable callback props.
+Updates preserve the object references of the other notes. The board still renders
+when the notes array changes; memoization isolates each note's render.
+
+Storage writes use a 300 ms debounce for movement, resizing, text, and other changes.
+Closing the tab before that delay completes may discard the most recent changes.
+
+Notes start in a staggered pattern (repeating every ten notes). Dragging and resizing
+stay within the board. A ResizeObserver also fits restored notes and existing notes
+to the board when its dimensions change. Dragging and resizing require the primary
+pointer and the main mouse button. Clicking any part of a note brings it forward.

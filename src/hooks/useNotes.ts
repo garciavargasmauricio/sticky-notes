@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import type { Note, Position, Size } from "../types/note";
 
 import { loadNotes, saveNotes } from "../utils/storage";
 import {
-  DEFAULT_POSITION,
   DEFAULT_SIZE,
   getNextZIndex,
   getRandomNoteColor,
@@ -13,15 +12,17 @@ import {
 export function useNotes() {
   const [notes, setNotes] = useState<Note[]>(loadNotes);
 
-  // Keep the notes persisted between sessions.
+  // Coalesce rapid pointer and text updates into one storage write.
   useEffect(() => {
-    saveNotes(notes);
+    const timeout = window.setTimeout(() => saveNotes(notes), 300);
+
+    return () => window.clearTimeout(timeout);
   }, [notes]);
 
-  function createNote(
-    position: Position = DEFAULT_POSITION,
+  const createNote = useCallback((
+    position: Position,
     size: Size = DEFAULT_SIZE,
-  ) {
+  ) => {
     setNotes((currentNotes) => {
       const newNote: Note = {
         id: crypto.randomUUID(),
@@ -44,9 +45,9 @@ export function useNotes() {
 
       return [...currentNotes, newNote];
     });
-  }
+  }, []);
 
-  function moveNote(id: string, position: Position) {
+  const moveNote = useCallback((id: string, position: Position) => {
     setNotes((currentNotes) =>
       currentNotes.map((note) =>
         note.id === id
@@ -57,9 +58,9 @@ export function useNotes() {
           : note,
       ),
     );
-  }
+  }, []);
 
-  function resizeNote(id: string, size: Size) {
+  const resizeNote = useCallback((id: string, size: Size) => {
     setNotes((currentNotes) =>
       currentNotes.map((note) =>
         note.id === id
@@ -70,9 +71,9 @@ export function useNotes() {
           : note,
       ),
     );
-  }
+  }, []);
 
-  function updateNoteText(id: string, text: string) {
+  const updateNoteText = useCallback((id: string, text: string) => {
     setNotes((currentNotes) =>
       currentNotes.map((note) =>
         note.id === id
@@ -83,13 +84,13 @@ export function useNotes() {
           : note,
       ),
     );
-  }
+  }, []);
 
-  function deleteNote(id: string) {
+  const deleteNote = useCallback((id: string) => {
     setNotes((currentNotes) => currentNotes.filter((note) => note.id !== id));
-  }
+  }, []);
 
-  function bringToFront(id: string) {
+  const bringToFront = useCallback((id: string) => {
     setNotes((currentNotes) => {
       const nextZIndex = getNextZIndex(currentNotes);
 
@@ -102,10 +103,32 @@ export function useNotes() {
           : note,
       );
     });
-  }
+  }, []);
+
+  const fitNotesToBoard = useCallback((bounds: Size) => {
+    setNotes((currentNotes) => {
+      let changed = false;
+      const fitted = currentNotes.map((note) => {
+        const size = {
+          width: Math.min(note.size.width, bounds.width),
+          height: Math.min(note.size.height, bounds.height),
+        };
+        const position = {
+          x: Math.max(0, Math.min(note.position.x, bounds.width - size.width)),
+          y: Math.max(0, Math.min(note.position.y, bounds.height - size.height)),
+        };
+        if (size.width === note.size.width && size.height === note.size.height &&
+            position.x === note.position.x && position.y === note.position.y) return note;
+        changed = true;
+        return { ...note, size, position };
+      });
+      return changed ? fitted : currentNotes;
+    });
+  }, []);
 
   return {
     notes,
+    fitNotesToBoard,
     createNote,
     moveNote,
     resizeNote,

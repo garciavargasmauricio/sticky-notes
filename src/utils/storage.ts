@@ -21,5 +21,9 @@ export function loadNotes<T>(): T[] {
 }
 
 export function saveNotes<T>(notes: T[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+  } catch {
+    // Keep the board usable when storage is unavailable or full.
+  }
 }

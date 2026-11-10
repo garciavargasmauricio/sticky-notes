@@ -6,7 +6,7 @@ interface TrashZoneProps {
 
 export function TrashZone({ isActive }: TrashZoneProps) {
   return (
-    <div className="trash-zone" aria-label="Trash zone">
+    <div className={`trash-zone${isActive ? " trash-zone--active" : ""}`} aria-label="Trash zone">
       <span className="trash-zone__icon" aria-hidden="true">
         🗑️
       </span>

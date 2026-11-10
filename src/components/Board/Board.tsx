@@ -1,22 +1,22 @@
-import { useRef, useState, type PointerEvent } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 
 import { useNotes } from "../../hooks/useNotes";
 
 import { StickyNote } from "../StickyNote/StickyNote";
 import { TrashZone } from "../TrashZone/TrashZone";
 
-import "./Board.css";
+import { noteToRectangle, rectanglesOverlap } from "../../utils/geometry";
+import { DEFAULT_POSITION, DEFAULT_SIZE } from "../../utils/notes";
+import type { Position } from "../../types/note";
 
-interface NotePosition {
-  x: number;
-  y: number;
-}
+import "./Board.css";
 
 export function Board() {
   const boardRef = useRef<HTMLElement | null>(null);
 
   const {
     notes,
+    fitNotesToBoard,
     createNote,
     moveNote,
     resizeNote,
@@ -25,21 +25,50 @@ export function Board() {
     bringToFront,
   } = useNotes();
 
+  const notesRef = useRef(notes);
+  useLayoutEffect(() => {
+    notesRef.current = notes;
+  }, [notes]);
+
+  useLayoutEffect(() => {
+    const board = boardRef.current;
+    if (!board) return;
+    const fit = () => fitNotesToBoard({ width: board.clientWidth, height: board.clientHeight });
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(board);
+    return () => observer.disconnect();
+  }, [fitNotesToBoard]);
+
+  function handleCreateNote() {
+    const board = boardRef.current;
+    if (!board) return;
+    const offset = (notes.length % 10) * 24;
+    const size = {
+      width: Math.min(DEFAULT_SIZE.width, board.clientWidth),
+      height: Math.min(DEFAULT_SIZE.height, board.clientHeight),
+    };
+    createNote({
+      x: Math.max(0, Math.min(DEFAULT_POSITION.x + offset, board.clientWidth - size.width)),
+      y: Math.max(0, Math.min(DEFAULT_POSITION.y + offset, board.clientHeight - size.height)),
+    }, size);
+  }
+
   const [draggingNoteId, setDraggingNoteId] = useState<string | null>(null);
 
   const [isOverTrash, setIsOverTrash] = useState(false);
 
   const isOverTrashRef = useRef(false);
 
-  function handleDragStart(id: string) {
+  const handleDragStart = useCallback((id: string) => {
     setDraggingNoteId(id);
 
     setIsOverTrash(false);
 
     isOverTrashRef.current = false;
-  }
+  }, []);
 
-  function handleDragMove(id: string, position: NotePosition) {
+  const handleDragMove = useCallback((id: string, position: Position) => {
     moveNote(id, position);
 
     const board = boardRef.current;
@@ -54,7 +83,7 @@ export function Board() {
       return;
     }
 
-    const note = notes.find((item) => item.id === id);
+    const note = notesRef.current.find((item) => item.id === id);
 
     if (!note) {
       return;
@@ -64,51 +93,35 @@ export function Board() {
 
     const trashRect = trashZone.getBoundingClientRect();
 
-    const noteLeft = boardRect.left + position.x;
-
-    const noteTop = boardRect.top + position.y;
-
-    const noteRight = noteLeft + note.size.width;
-
-    const noteBottom = noteTop + note.size.height;
-
-    const isOver =
-      noteLeft < trashRect.right &&
-      noteRight > trashRect.left &&
-      noteTop < trashRect.bottom &&
-      noteBottom > trashRect.top;
+    const isOver = rectanglesOverlap(
+      noteToRectangle({ x: boardRect.left + position.x, y: boardRect.top + position.y }, note.size),
+      { x: trashRect.left, y: trashRect.top, width: trashRect.width, height: trashRect.height },
+    );
 
     isOverTrashRef.current = isOver;
 
     setIsOverTrash(isOver);
-  }
+  }, [moveNote]);
 
-  function handleDragEnd(id: string) {
+  const handleDragCancel = useCallback(() => {
+    setDraggingNoteId(null);
+    setIsOverTrash(false);
+    isOverTrashRef.current = false;
+  }, []);
+
+  const handleDragEnd = useCallback((id: string) => {
     if (isOverTrashRef.current) {
       deleteNote(id);
     }
-
-    setDraggingNoteId(null);
-
-    setIsOverTrash(false);
-
-    isOverTrashRef.current = false;
-  }
-
-  function handleDragCancel(id: string) {
-    setDraggingNoteId(null);
-
-    setIsOverTrash(false);
-
-    isOverTrashRef.current = false;
-  }
+    handleDragCancel();
+  }, [deleteNote, handleDragCancel]);
 
   return (
     <main ref={boardRef} className="board">
       <button
         className="board__new-note-button"
         type="button"
-        onClick={() => createNote()}
+        onClick={handleCreateNote}
       >
         + New Note
       </button>
